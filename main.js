@@ -81,6 +81,9 @@ const palfSocialList = document.getElementById('palf-social-list');
 const palfBandsList = document.getElementById('palf-bands-list');
 const truvatosSocialList = document.getElementById('truvatos-social-list');
 
+// Use the Truvatos report URL as the default for PALF band social links
+const defaultPalfBandSocialUrl = data.truvatos[0].truvatosReportUrl;
+
 
 // --- Menu Population Functions ---
 
@@ -90,21 +93,7 @@ function populateArtistsMenu() {
     const listItem = document.createElement('li');
     listItem.textContent = artist.name;
     listItem.dataset.itemId = artist.id;
-
-    const subMenu = document.createElement('ul');
-    subMenu.classList.add('sub-menu');
-
-    // Add social media links to sub-menu (using PALF social media structure for consistency)
-    data.palf.socialMedia.forEach(social => {
-        const subListItem = document.createElement('li');
-        subListItem.textContent = social.name;
-        subListItem.dataset.itemId = artist.id; // Artist ID
-        subListItem.dataset.socialId = social.id; // Social Media ID
-        subListItem.dataset.type = 'artist-social'; // Type indicator
-        subMenu.appendChild(subListItem);
-    });
-
-    listItem.appendChild(subMenu);
+    // Artists do not need social media sub-menus
     artistsList.appendChild(listItem);
   });
 }
@@ -113,7 +102,7 @@ function populatePalfMenu() {
   palfSocialList.innerHTML = '';
   palfBandsList.innerHTML = '';
 
-  // Populate Social Media Column
+  // Populate Social Media Column (These will load reports directly)
   data.palf.socialMedia.forEach(social => {
     const listItem = document.createElement('li');
     listItem.textContent = social.name;
@@ -122,7 +111,7 @@ function populatePalfMenu() {
     palfSocialList.appendChild(listItem);
   });
 
-  // Populate Bands Column
+  // Populate Bands Column (These will have social media sub-menus)
   data.palf.bands.forEach(band => {
     const listItem = document.createElement('li');
     listItem.textContent = band.name;
@@ -153,13 +142,14 @@ function populateTruvatosMenu() {
     listItem.textContent = social.name;
     listItem.dataset.itemId = social.id;
     listItem.dataset.type = 'truvatos-social'; // Type indicator
+    // Truvatos do not need social media sub-menus
     truvatosSocialList.appendChild(listItem);
   });
 }
 
 // --- Panel Creation ---
 
-function createPanels(sectionId, items) {
+function createPanels(sectionId) {
   const gridContainer = document.getElementById(`${sectionId}-grid-container`);
   if (!gridContainer) return;
 
@@ -177,25 +167,41 @@ function createPanels(sectionId, items) {
   panelTitle.classList.add('panel-title');
   panelTitle.textContent = `${sectionId.toUpperCase()} Data Panel`; // Dynamic title
 
+  const headerActions = document.createElement('div');
+  headerActions.classList.add('header-actions');
+
+  // Create and append the Private Data button inside the header actions
+  const privateDataButton = document.createElement('button');
+  privateDataButton.id = 'private-data-button';
+  privateDataButton.className = 'private-data-button'; // Use the new class for styling
+  privateDataButton.innerHTML = '<span class="material-icons">lock</span>PRIVATE DATA';
+  privateDataButton.addEventListener('click', () => {
+    window.location.href = 'https://data.hybelatinamerica.com/';
+  });
+
   const panelIcon = document.createElement('span');
   panelIcon.classList.add('material-icons');
   panelIcon.textContent = 'insert_chart';
 
+  headerActions.appendChild(privateDataButton);
+  headerActions.appendChild(panelIcon);
+
   panelHeader.appendChild(panelTitle);
-  panelHeader.appendChild(panelIcon);
+  panelHeader.appendChild(headerActions); // Append the actions container
 
   const panelContent = document.createElement('div');
   panelContent.classList.add('panel-content');
 
-  const iframe = document.createElement('iframe');
-  iframe.title = `${sectionId.toUpperCase()} Data Panel`;
-  iframe.frameborder = "0";
-  iframe.style.border = "0";
-  iframe.allowfullscreen = true;
-  iframe.sandbox = "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
-  iframe.src = 'about:blank'; // Start blank
+  // Initially add a video element with autoplay, loop, and no controls
+  const video = document.createElement('video');
+  video.autoplay = true; // Autoplay
+  video.loop = true; // Loop
+  video.controls = false; // No controls
+  video.muted = true; // Mute autoplay video for browser compatibility
+  video.src = `/public/${sectionId}.mp4`; // Set video source based on sectionId
+  video.title = `${sectionId.toUpperCase()} Video`;
 
-  panelContent.appendChild(iframe);
+  panelContent.appendChild(video);
   panel.appendChild(panelHeader);
   panel.appendChild(panelContent);
   gridContainer.appendChild(panel);
@@ -226,24 +232,47 @@ function handleMenuItemClick(event) {
         targetLi.closest('li').classList.add('active');
     }
 
+    const activeSection = document.querySelector('.content-section.active');
+    if (!activeSection) return;
+
+    const mainPanel = activeSection.querySelector('.panel');
+    if (!mainPanel) return;
+
+    const panelContent = mainPanel.querySelector('.panel-content');
+    const titleSpan = mainPanel.querySelector('.panel-title');
 
     let targetUrl = 'about:blank';
     let panelTitle = `${activeTab.toUpperCase()} Data Panel`;
 
+    // Clear current content (video or iframe)
+    panelContent.innerHTML = '';
+
     if (activeTab === 'artists') {
         const artist = data.artists.find(a => a.id === itemId);
-        if (artist && socialId) { // Clicked a social link in an artist sub-menu
-             // Find the corresponding social media data to get the URL structure
-            const socialMedia = data.palf.socialMedia.find(s => s.id === socialId);
-            if (socialMedia && artist.reportUrls && artist.reportUrls.length > 0) {
-                 // Assuming the first URL in reportUrls is the main one for the artist
-                 // This might need adjustment if different social media need different URLs per artist
-                 targetUrl = artist.reportUrls[0]; // Use the artist's main report URL for now
-                 panelTitle = `${artist.name} - ${socialMedia.name} Panel`;
-            }
-        } else if (artist) { // Clicked an artist name (shouldn't load panel, just open sub-menu)
-             // Do nothing, hover handles sub-menu display
-             return;
+        if (artist && artist.reportUrls && artist.reportUrls.length > 0) {
+             // For artists, load the first report URL into an iframe
+             targetUrl = artist.reportUrls[0];
+             panelTitle = `${artist.name} Panel`;
+
+             const iframe = document.createElement('iframe');
+             iframe.title = panelTitle;
+             iframe.frameborder = "0";
+             iframe.style.border = "0";
+             iframe.allowfullscreen = true;
+             iframe.sandbox = "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+             iframe.src = targetUrl;
+             panelContent.appendChild(iframe);
+        } else {
+             // If no artist or URL found, revert to video
+             const video = document.createElement('video');
+             video.autoplay = true; // Autoplay
+             video.loop = true; // Loop
+             video.controls = false; // No controls
+             video.muted = true; // Mute autoplay video
+             video.src = `/public/${activeTab}.mp4`;
+             video.title = `${activeTab.toUpperCase()} Video`;
+             panelContent.appendChild(video);
+             panelTitle = `${activeTab.toUpperCase()} Data Panel`;
         }
     } else if (activeTab === 'palf') {
         if (itemType === 'palf-social') { // Clicked a social link in the main PALF social column
@@ -255,25 +284,77 @@ function handleMenuItemClick(event) {
                  }
                 targetUrl = social.palfReportUrl;
                 panelTitle = `PALF - ${social.name} Panel`;
+
+                const iframe = document.createElement('iframe');
+                iframe.title = panelTitle;
+                iframe.frameborder = "0";
+                iframe.style.border = "0";
+                iframe.allowfullscreen = true;
+                iframe.sandbox = "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+                iframe.src = targetUrl;
+                panelContent.appendChild(iframe);
+            } else {
+                 // If no social or URL found, revert to video
+                 const video = document.createElement('video');
+                 video.autoplay = true; // Autoplay
+                 video.loop = true; // Loop
+                 video.controls = false; // No controls
+                 video.muted = true; // Mute autoplay video
+                 video.src = `/public/${activeTab}.mp4`;
+                 video.title = `${activeTab.toUpperCase()} Video`;
+                 panelContent.appendChild(video);
+                 panelTitle = `${activeTab.toUpperCase()} Data Panel`;
             }
             selectedBandId = null; // No band selected when clicking main social links
         } else if (itemType === 'palf-band-social') { // Clicked a social link in a band sub-menu
             const band = data.palf.bands.find(b => b.id === itemId); // itemId is bandId here
             const social = data.palf.socialMedia.find(s => s.id === socialId); // socialId is the social media ID
-             if (band && social && social.palfReportUrl) {
+             if (band && social) {
                  if (social.id === 'public-relations') {
                     window.location.href = social.palfReportUrl; // Redirect for Public Relations
                     return;
                  }
-                // For now, using the general PALF social URL for band social links
-                // This might need adjustment if bands have specific social URLs
-                targetUrl = social.palfReportUrl;
+                // Use the default Truvatos URL for PALF band social links initially
+                targetUrl = defaultPalfBandSocialUrl; // Use the default URL
                 panelTitle = `${band.name} - ${social.name} Panel`;
+
+                const iframe = document.createElement('iframe');
+                iframe.title = panelTitle;
+                iframe.frameborder = "0";
+                iframe.style.border = "0";
+                iframe.allowfullscreen = true;
+                iframe.sandbox = "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+                iframe.src = targetUrl;
+                panelContent.appendChild(iframe);
+            } else {
+                 // If no band or social found, revert to video
+                 const video = document.createElement('video');
+                 video.autoplay = true; // Autoplay
+                 video.loop = true; // Loop
+                 video.controls = false; // No controls
+                 video.muted = true; // Mute autoplay video
+                 video.src = `/public/${activeTab}.mp4`;
+                 video.title = `${activeTab.toUpperCase()} Video`;
+                 panelContent.appendChild(video);
+                 panelTitle = `${activeTab.toUpperCase()} Data Panel`;
             }
             selectedBandId = itemId; // Set the selected band
         } else { // Clicked a band name (shouldn't load panel, just open sub-menu)
              // Do nothing, hover handles sub-menu display
              selectedBandId = itemId; // Set the selected band
+             // Revert to video if a band name is clicked without a social link
+             const video = document.createElement('video');
+             video.autoplay = true; // Autoplay
+             video.loop = true; // Loop
+             video.controls = false; // No controls
+             video.muted = true; // Mute autoplay video
+             video.src = `/public/${activeTab}.mp4`;
+             video.title = `${activeTab.toUpperCase()} Video`;
+             panelContent.appendChild(video);
+             panelTitle = `${activeTab.toUpperCase()} Data Panel`;
+             if (titleSpan) {
+                titleSpan.textContent = panelTitle;
+             }
              return;
         }
     } else if (activeTab === 'truvatos') {
@@ -286,24 +367,59 @@ function handleMenuItemClick(event) {
                  }
                 targetUrl = social.truvatosReportUrl;
                 panelTitle = `TRUVATOS - ${social.name} Panel`;
+
+                const iframe = document.createElement('iframe');
+                iframe.title = panelTitle;
+                iframe.frameborder = "0";
+                iframe.style.border = "0";
+                iframe.allowfullscreen = true;
+                iframe.sandbox = "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+                iframe.src = targetUrl;
+                panelContent.appendChild(iframe);
+            } else {
+                 // If no social or URL found, revert to video
+                 const video = document.createElement('video');
+                 video.autoplay = true; // Autoplay
+                 video.loop = true; // Loop
+                 video.controls = false; // No controls
+                 video.muted = true; // Mute autoplay video
+                 video.src = `/public/${activeTab}.mp4`;
+                 video.title = `${activeTab.toUpperCase()} Video`;
+                 panelContent.appendChild(video);
+                 panelTitle = `${activeTab.toUpperCase()} Data Panel`;
             }
+        } else { // Clicked a main Truvatos item (should load its report)
+             const truvatosItem = data.truvatos.find(t => t.id === itemId); // Assuming Truvatos items have IDs
+             if (truvatosItem && truvatosItem.truvatosReportUrl) {
+                 targetUrl = truvatosItem.truvatosReportUrl;
+                 panelTitle = `TRUVATOS - ${truvatosItem.name} Panel`;
+
+                 const iframe = document.createElement('iframe');
+                 iframe.title = panelTitle;
+                 iframe.frameborder = "0";
+                 iframe.style.border = "0";
+                 iframe.allowfullscreen = true;
+                 iframe.sandbox = "allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+                 iframe.src = targetUrl;
+                 panelContent.appendChild(iframe);
+             } else {
+                 // If no item or URL found, revert to video
+                 const video = document.createElement('video');
+                 video.autoplay = true; // Autoplay
+                 video.loop = true; // Loop
+                 video.controls = false; // No controls
+                 video.muted = true; // Mute autoplay video
+                 video.src = `/public/${activeTab}.mp4`;
+                 video.title = `${activeTab.toUpperCase()} Video`;
+                 panelContent.appendChild(video);
+                 panelTitle = `${activeTab.toUpperCase()} Data Panel`;
+             }
         }
     }
 
-    // Update the iframe source and panel title
-    const activeSection = document.querySelector('.content-section.active');
-    if (activeSection) {
-        const mainPanel = activeSection.querySelector('.panel');
-        if (mainPanel) {
-            const iframe = mainPanel.querySelector('iframe');
-            const titleSpan = mainPanel.querySelector('.panel-title');
-            if (iframe) {
-                iframe.src = targetUrl;
-            }
-            if (titleSpan) {
-                titleSpan.textContent = panelTitle;
-            }
-        }
+    // Update the panel title
+    if (titleSpan) {
+        titleSpan.textContent = panelTitle;
     }
 }
 
@@ -326,24 +442,24 @@ function switchTab(tabId) {
     activeContentSection.classList.add('active');
 
     // Create the single panel for the active section
-    createPanels(tabId, []); // Pass empty array as items are handled by menu clicks
+    createPanels(tabId); // Pass tabId to createPanels
 
     // Populate the correct hover menu and attach event listeners
+    // Remove existing listeners to prevent duplicates
+    artistsList.removeEventListener('click', handleMenuItemClick);
+    palfMenu.removeEventListener('click', handleMenuItemClick);
+    truvatosMenu.removeEventListener('click', handleMenuItemClick);
+
+
     if (tabId === 'artists') {
       populateArtistsMenu();
       artistsList.addEventListener('click', handleMenuItemClick);
-      palfMenu.removeEventListener('click', handleMenuItemClick);
-      truvatosMenu.removeEventListener('click', handleMenuItemClick);
     } else if (tabId === 'palf') {
       populatePalfMenu();
       palfMenu.addEventListener('click', handleMenuItemClick);
-      artistsMenu.removeEventListener('click', handleMenuItemClick);
-      truvatosMenu.removeEventListener('click', handleMenuItemClick);
     } else if (tabId === 'truvatos') {
       populateTruvatosMenu();
       truvatosMenu.addEventListener('click', handleMenuItemClick);
-      artistsMenu.removeEventListener('click', handleMenuItemClick);
-      palfMenu.removeEventListener('click', handleMenuItemClick);
     }
 
     // Reset selected items when switching tabs
@@ -365,17 +481,4 @@ navButtons.forEach(button => {
 // Initial tab switch to 'artists'
 switchTab('artists');
 
-// Private Data Button
-const privateDataButton = document.getElementById('private-data-button');
-if (privateDataButton) {
-  privateDataButton.addEventListener('click', () => {
-    window.location.href = 'https://data.hybelatinamerica.com/';
-  });
-}
-
-// Remove sidebar toggle logic (already removed in HTML/CSS)
-// const sidebarTab = document.querySelector('.sidebar-tab');
-// const body = document.body;
-// function toggleSidebar() { ... }
-// sidebarTab.addEventListener('click', toggleSidebar);
-// sidebarTab.addEventListener('keydown', (e) => { ... });
+// Removed the old private data button event listener

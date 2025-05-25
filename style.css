@@ -52,8 +52,8 @@
   --transition-duration: 0.3s;
   --button-transition-duration: 0.15s;
 
-  --panel-height-desktop: 75vh;
-  --panel-height-mobile: 50vh;
+  --panel-height-desktop: 90vh; /* Increased panel height */
+  --panel-height-mobile: 80vh; /* Increased panel height for mobile */
   --panel-border-width: 2px;
 }
 
@@ -304,16 +304,16 @@ body {
 
 /* Content Area Adjustments */
 .container {
-  padding-top: calc(var(--header-height) + 32px); /* Adjust padding to be below header and nav */
+  padding-top: calc(var(--header-height) + 8px); /* Reduced padding */
   display: flex;
-  height: calc(100vh - var(--header-height) - 32px); /* Adjust height to fill remaining space */
+  height: calc(100vh - var(--header-height) - 8px); /* Adjusted height */
   overflow: hidden;
 }
 
 .content-section {
   display: none;
-  padding-top: calc(var(--header-height) + 32px); /* Adjust padding to be below header and nav */
-  height: calc(100vh - var(--header-height) - 32px); /* Adjust height to fill remaining space */
+  padding-top: calc(var(--header-height) + 8px); /* Reduced padding */
+  height: calc(100vh - var(--header-height) - 8px); /* Adjusted height */
   overflow: hidden;
 }
 
@@ -325,21 +325,6 @@ body {
   padding-top: 0;
   height: 100%;
 }
-
-/* Sidebar styles - REMOVED */
-/*
-.sidebar-tab { ... }
-.sidebar-open .sidebar-tab { ... }
-.sidebar-open .sidebar-tab .arrow-icon { ... }
-.artist-list-section { ... }
-.sidebar-open .artist-list-section { ... }
-.sidebar-title h2 { ... }
-#artists-list, #palf-list, #truvatos-list { ... }
-#artists-list li, #palf-list li, #truvatos-list li { ... }
-#artists-list li:last-child, #palf-list li:last-child, #truvatos-list li:last-child { ... }
-#artists-list li:hover, #palf-list li:hover, #truvatos-list li:hover { ... }
-#artists-list li.active, #palf-list li.active, #truvatos-list li.active { ... }
-*/
 
 .panels-section {
   margin-left: 0; /* No sidebar margin */
@@ -353,9 +338,6 @@ body {
   justify-content: center;
   align-items: center;
 }
-
-/* .sidebar-open .panels-section { ... } - REMOVED */
-
 
 .grid-container {
   display: flex;
@@ -397,50 +379,65 @@ body {
   flex-grow: 1;
 }
 
-.panel-header .panel-icon {
-  font-size: 1.5em;
+.panel-header .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Space between button and icon */
 }
+
+/* Style for the private data button inside the panel header */
+.panel-header .private-data-button {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Space between icon and text */
+  transition: all var(--button-transition-duration) ease;
+}
+
+.panel-header .private-data-button:hover {
+  background-color: var(--color-primary);
+  color: var(--color-secondary);
+}
+
+.panel-header .material-icons {
+  font-size: 20px; /* Adjust icon size if needed */
+}
+
 
 .panel-content {
   flex-grow: 1;
   position: relative;
 }
 
-.panel-content iframe {
+.panel-content iframe,
+.panel-content video { /* Add video to styles */
   width: 100%;
   height: 100%;
   display: block;
 }
 
+/* Remove the old static private-data-button styles */
 .private-data-button {
-  position: fixed;
-  bottom: var(--gap);
-  left: var(--gap);
-  background-color: var(--color-primary);
-  color: var(--color-secondary);
-  border: 2px solid var(--color-secondary);
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  transition: background-color var(--button-transition-duration) ease,
-              color var(--button-transition-duration) ease,
-              box-shadow var(--button-transition-duration) ease;
-  z-index: 1000;
+  display: none;
 }
 
-.private-data-button .material-icons {
-  margin-right: 8px;
+/* Update hover menu styles for artists - remove sub-menu display */
+#artists-menu .sub-menu {
+  display: none !important;
 }
 
-.private-data-button:hover {
-  background-color: var(--color-secondary);
-  color: var(--color-primary);
-  box-shadow: 0 0 8px var(--color-secondary);
+/* Update hover menu styles for truvatos - remove sub-menu display */
+#truvatos-menu .sub-menu {
+  display: none !important;
 }
+
 
 @media (max-width: 768px) {
   .main-header h1 {
@@ -506,15 +503,6 @@ body {
     height: calc(100vh - var(--header-height) - 64px); /* Adjust height for mobile */
   }
 
-  /* Sidebar tab - REMOVED */
-  /*
-  .sidebar-tab { ... }
-  .sidebar-open .sidebar-tab { ... }
-  .sidebar-open .sidebar-tab .arrow-icon { ... }
-  .artist-list-section { ... }
-  .sidebar-open .artist-list-section { ... }
-  */
-
   .panels-section {
     margin-left: 0;
     width: 100%;
@@ -524,13 +512,15 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .private-data-button {
-    bottom: var(--gap);
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - var(--gap) * 2);
-    justify-content: center;
+  /* Adjust private data button position for mobile if needed, but it's now in header */
+  .panel-header .private-data-button {
+     font-size: 0.8em;
+     padding: 4px 8px;
+     gap: 4px;
   }
+   .panel-header .material-icons {
+     font-size: 18px;
+   }
 }
 
 /* Password Overlay Styles - Updated for two colors */
