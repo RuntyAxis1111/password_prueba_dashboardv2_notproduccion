@@ -8,10 +8,10 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --sidebar-width-desktop: 250px;
+  --sidebar-width-desktop: 250px; /* Keep variable but not used for layout */
   --header-height: 64px;
   --gap: 15px;
-  --band-buttons-height: 32px; /* Define height for band buttons */
+  --band-buttons-height: 32px; /* Keep variable but not used for layout */
 
   /* Define the two primary colors */
   --color-primary: #FFFFFF; /* White (Dominant) */
@@ -24,15 +24,15 @@
   --color-light-grey: rgba(0, 0, 0, 0.1); /* Black with transparency */
   --color-dark-grey: rgba(0, 0, 0, 0.5); /* Black with transparency */
   --color-panel-background: var(--color-primary);
-  --color-sidebar-gradient-start: var(--color-primary);
-  --color-sidebar-gradient-end: var(--color-primary);
+  --color-sidebar-gradient-start: var(--color-primary); /* Keep variable but not used */
+  --color-sidebar-gradient-end: var(--color-primary); /* Keep variable but not used */
   --color-fire-glow: rgba(0, 0, 0, 0.1); /* Subtle black glow */
   --color-neon-glow: rgba(0, 0, 0, 0.2); /* Subtle black glow */
 
   --main-bg-color: var(--color-primary);
-  --sidebar-bg-color-start: var(--color-primary);
-  --sidebar-bg-color-end: var(--color-primary);
-  --sidebar-text-color: var(--color-secondary);
+  --sidebar-bg-color-start: var(--color-primary); /* Keep variable but not used */
+  --sidebar-bg-color-end: var(--color-primary); /* Keep variable but not used */
+  --sidebar-text-color: var(--color-secondary); /* Keep variable but not used */
   --panel-bg-color: var(--color-primary);
   --panel-border-color: var(--color-secondary);
   --header-bg-color: var(--color-primary);
@@ -132,11 +132,22 @@ body {
   display: flex;
   width: 100%;
   height: 32px;
+  position: relative; /* Needed for positioning hover menus */
+  z-index: 990; /* Below header, above content */
+}
+
+.nav-item {
+  flex-grow: 1;
+  flex-basis: 0;
+  position: relative; /* Needed for positioning hover menu relative to item */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .nav-button {
-  flex-grow: 1;
-  flex-basis: 0;
+  width: 100%;
+  height: 100%;
   background-color: transparent;
   color: var(--color-secondary); /* Use secondary color for button text */
   border: none;
@@ -155,11 +166,11 @@ body {
   clip-path: polygon(0 0, 100% 0, calc(100% - 15px) 100%, 0 100%);
 }
 
-.main-nav .nav-button:nth-child(1) {
+.main-nav .nav-item:nth-child(1) .nav-button {
   margin-right: -15px;
 }
 
-.main-nav .nav-button:nth-child(2) {
+.main-nav .nav-item:nth-child(2) .nav-button {
   z-index: 1;
   margin-right: -15px;
 }
@@ -174,61 +185,135 @@ body {
   color: var(--active-item-text-color);
 }
 
-.band-buttons-container {
+/* Hover Menu Styles */
+.hover-menu {
   display: none;
-  position: fixed;
-  top: calc(var(--header-height) + 32px); /* Position below main nav */
-  left: 0;
-  width: 100%;
-  height: var(--band-buttons-height); /* Use defined height */
+  position: absolute;
+  top: 100%; /* Position below the nav button */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Adjust for centering */
   background-color: var(--color-primary);
-  z-index: 990;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,.5);
+  border: 2px solid var(--color-secondary);
+  box-shadow: var(--card-box-shadow);
+  padding: var(--gap);
+  z-index: 980; /* Below main nav */
+  min-width: 200px;
+  box-sizing: border-box;
 }
 
-.band-buttons-container.active {
-  display: flex;
+.nav-item:hover > .hover-menu {
+  display: flex; /* Use flex for column layout */
+  flex-direction: column;
 }
 
-.band-button {
-  font-size: 1em;
+.hover-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hover-menu li {
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color var(--transition-duration) ease,
+              color var(--transition-duration) ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Subtle separator */
   font-weight: bold;
   text-transform: uppercase;
-  background-color: var(--color-secondary); /* Use secondary for button background */
-  color: var(--color-primary); /* Use primary for button text */
-  border: none;
-  padding: 0 15px;
-  height: 100%;
-  cursor: pointer;
-  transition: background-color var(--button-transition-duration) ease-in-out,
-              color var(--button-transition-duration) ease-in-out;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 5px;
-  border-radius: 0;
-  clip-path: polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%);
+  color: var(--color-secondary);
+  position: relative; /* Needed for sub-menus */
 }
 
-.band-button:hover,
-.band-button.active {
-  background-color: var(--color-primary);
+.hover-menu li:last-child {
+  border-bottom: none;
+}
+
+.hover-menu li:hover {
+  background-color: rgba(0, 0, 0, 0.05); /* Lighter hover for menu items */
   color: var(--color-secondary);
 }
 
+.hover-menu li.active {
+   background-color: var(--active-item-bg-color);
+   color: var(--active-item-text-color);
+}
+
+/* PALF specific menu styles */
+.palf-menu {
+  flex-direction: row; /* Two columns */
+  gap: var(--gap);
+}
+
+.palf-menu .menu-column {
+  flex: 1;
+}
+
+.palf-menu .menu-column h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1em;
+  color: var(--color-secondary);
+  border-bottom: 1px solid var(--color-secondary);
+  padding-bottom: 5px;
+}
+
+/* Sub-menu styles */
+.sub-menu {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 100%; /* Position to the right of the parent item */
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-secondary);
+  box-shadow: var(--card-box-shadow);
+  padding: var(--gap);
+  z-index: 985; /* Above main hover menu */
+  min-width: 150px;
+  box-sizing: border-box;
+}
+
+.hover-menu li:hover > .sub-menu {
+  display: block;
+}
+
+.sub-menu li {
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color var(--transition-duration) ease,
+              color var(--transition-duration) ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-weight: normal; /* Less bold than parent */
+  text-transform: none; /* Not uppercase */
+  color: var(--color-secondary);
+}
+
+.sub-menu li:last-child {
+  border-bottom: none;
+}
+
+.sub-menu li:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-secondary);
+}
+
+.sub-menu li.active {
+   background-color: var(--active-item-bg-color);
+   color: var(--active-item-text-color);
+}
+
+
+/* Content Area Adjustments */
 .container {
-  padding-top: calc(var(--header-height) + 32px + var(--band-buttons-height)); /* Add band buttons height to padding */
+  padding-top: calc(var(--header-height) + 32px); /* Adjust padding to be below header and nav */
   display: flex;
-  height: calc(100vh - var(--header-height) - 32px - var(--band-buttons-height)); /* Subtract band buttons height */
+  height: calc(100vh - var(--header-height) - 32px); /* Adjust height to fill remaining space */
   overflow: hidden;
 }
 
 .content-section {
   display: none;
-  padding-top: calc(var(--header-height) + 32px + var(--band-buttons-height)); /* Add band buttons height to padding */
-  height: calc(100vh - var(--header-height) - 32px - var(--band-buttons-height)); /* Subtract band buttons height */
+  padding-top: calc(var(--header-height) + 32px); /* Adjust padding to be below header and nav */
+  height: calc(100vh - var(--header-height) - 32px); /* Adjust height to fill remaining space */
   overflow: hidden;
 }
 
@@ -241,68 +326,24 @@ body {
   height: 100%;
 }
 
-.sidebar-tab {
-  position: fixed;
-  left: 0;
-  top: 45vh;
-  width: 40px;
-  height: 90px;
-  background-color: rgba(0, 0, 0, 0.9); /* Secondary with transparency */
-  border: none;
-  border-radius: 0 50% 50% 0;
-  cursor: pointer;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: left var(--transition-duration) ease,
-              transform var(--transition-duration) ease;
-  color: var(--color-primary); /* Primary color for icon */
-  font-size: 24px;
-  padding: 0;
-}
-
-.sidebar-tab:focus {
-  outline: 2px solid var(--color-secondary);
-  outline-offset: 2px;
-}
-
-.sidebar-tab:hover {
-  background-color: var(--color-secondary);
-}
-
-.sidebar-open .sidebar-tab {
-  left: var(--sidebar-width-desktop);
-}
-
-.sidebar-open .sidebar-tab .arrow-icon {
-  transform: rotate(180deg);
-  display: inline-block;
-}
-
-.artist-list-section {
-  transform: translateX(-100%);
-  transition: transform var(--transition-duration) ease;
-  position: fixed;
-  top: calc(var(--header-height) + 32px + var(--band-buttons-height)); /* Adjust top position */
-  left: 0;
-  width: var(--sidebar-width-desktop);
-  height: calc(100vh - var(--header-height) - 32px - var(--band-buttons-height)); /* Adjust height */
-  background: linear-gradient(to top, var(--color-primary), var(--color-primary)); /* Use primary color */
-  color: var(--sidebar-text-color);
-  padding: var(--gap);
-  box-sizing: border-box;
-  overflow-y: auto;
-  z-index: 999;
-}
-
-.sidebar-open .artist-list-section {
-  transform: translateX(0);
-}
+/* Sidebar styles - REMOVED */
+/*
+.sidebar-tab { ... }
+.sidebar-open .sidebar-tab { ... }
+.sidebar-open .sidebar-tab .arrow-icon { ... }
+.artist-list-section { ... }
+.sidebar-open .artist-list-section { ... }
+.sidebar-title h2 { ... }
+#artists-list, #palf-list, #truvatos-list { ... }
+#artists-list li, #palf-list li, #truvatos-list li { ... }
+#artists-list li:last-child, #palf-list li:last-child, #truvatos-list li:last-child { ... }
+#artists-list li:hover, #palf-list li:hover, #truvatos-list li:hover { ... }
+#artists-list li.active, #palf-list li.active, #truvatos-list li.active { ... }
+*/
 
 .panels-section {
-  margin-left: 0;
-  transition: margin-left var(--transition-duration) ease;
+  margin-left: 0; /* No sidebar margin */
+  transition: none; /* No sidebar transition */
   width: 100%;
   flex-grow: 1;
   padding: var(--gap);
@@ -313,60 +354,8 @@ body {
   align-items: center;
 }
 
-.sidebar-open .panels-section {
-  margin-left: var(--sidebar-width-desktop);
-  width: calc(100% - var(--sidebar-width-desktop));
-}
+/* .sidebar-open .panels-section { ... } - REMOVED */
 
-.sidebar-title h2 {
-  margin-top: 0;
-  color: var(--color-secondary);
-  font-size: 1.2em;
-  border-bottom: 2px solid var(--color-secondary);
-  padding-bottom: 5px;
-  margin-bottom: 15px;
-}
-
-#artists-list,
-#palf-list,
-#truvatos-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#artists-list li,
-#palf-list li,
-#truvatos-list li {
-  padding: 10px 0;
-  cursor: pointer;
-  transition: background-color var(--transition-duration) ease,
-              color var(--transition-duration) ease;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2); /* Black with transparency */
-  font-weight: bold;
-  text-transform: uppercase;
-  color: var(--color-secondary); /* Use secondary color for list items */
-}
-
-#artists-list li:last-child,
-#palf-list li:last-child,
-#truvatos-list li:last-child {
-  border-bottom: none;
-}
-
-#artists-list li:hover,
-#palf-list li:hover,
-#truvatos-list li:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Black with transparency */
-  color: var(--color-secondary);
-}
-
-#artists-list li.active,
-#palf-list li.active,
-#truvatos-list li.active {
-  background-color: var(--active-item-bg-color);
-  color: var(--active-item-text-color);
-}
 
 .grid-container {
   display: flex;
@@ -463,60 +452,72 @@ body {
     flex-direction: column;
   }
 
+  .nav-item {
+    width: 100%;
+  }
+
   .nav-button {
     padding: 10px 0;
     clip-path: none;
     margin-right: 0 !important;
   }
 
-  .band-buttons-container {
-    top: calc(var(--header-height) + 64px);
-    height: auto;
-    flex-direction: column;
-  }
-
-  .band-buttons-container.active {
-    display: flex;
-  }
-
-  .band-button {
+  /* Hover menu adjustments for mobile */
+  .hover-menu {
+    position: static; /* Stack below button */
+    transform: none;
     width: 100%;
-    padding: 10px 0;
-    margin: 2px 0;
-    clip-path: none;
+    border: none;
+    box-shadow: none;
+    padding: 0 var(--gap);
+    background-color: transparent;
   }
+
+  .nav-item:hover > .hover-menu {
+     display: none; /* Hide on hover for mobile, will need JS toggle */
+  }
+
+  .palf-menu {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .palf-menu .menu-column {
+    width: 100%;
+  }
+
+  .sub-menu {
+    position: static; /* Stack below parent item */
+    left: auto;
+    border: none;
+    box-shadow: none;
+    padding: 0 var(--gap);
+    background-color: transparent;
+  }
+
+  .hover-menu li:hover > .sub-menu {
+    display: none; /* Hide on hover for mobile, will need JS toggle */
+  }
+
 
   .container,
   .content-section {
-    padding-top: calc(var(--header-height) + 64px + var(--band-buttons-height) + var(--gap)); /* Adjust padding for mobile */
-    height: calc(100vh - var(--header-height) - 64px - var(--band-buttons-height) - var(--gap)); /* Adjust height for mobile */
+    padding-top: calc(var(--header-height) + 64px); /* Adjust padding for mobile */
+    height: calc(100vh - var(--header-height) - 64px); /* Adjust height for mobile */
   }
 
-  .sidebar-tab {
-    top: 50vh;
-    width: 30px;
-    height: 60px;
-    font-size: 18px;
-  }
-
-  .sidebar-open .sidebar-tab {
-    left: var(--sidebar-width-desktop);
-  }
-
-  .artist-list-section {
-    top: calc(var(--header-height) + 64px + var(--band-buttons-height)); /* Adjust top position for mobile */
-    height: calc(100vh - var(--header-height) - 64px - var(--band-buttons-height)); /* Adjust height for mobile */
-    width: var(--sidebar-width-desktop);
-  }
+  /* Sidebar tab - REMOVED */
+  /*
+  .sidebar-tab { ... }
+  .sidebar-open .sidebar-tab { ... }
+  .sidebar-open .sidebar-tab .arrow-icon { ... }
+  .artist-list-section { ... }
+  .sidebar-open .artist-list-section { ... }
+  */
 
   .panels-section {
     margin-left: 0;
     width: 100%;
-  }
-
-  .sidebar-open .panels-section {
-    margin-left: var(--sidebar-width-desktop);
-    width: calc(100% - var(--sidebar-width-desktop));
   }
 
   .grid-container {
